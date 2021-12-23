@@ -1,12 +1,11 @@
+use std::env;
+use std::io::{Cursor, Write};
+
 use image::imageops::FilterType;
 use image::io::Reader;
-use image::DynamicImage;
+use image::{DynamicImage, ImageBuffer, Rgba};
 use rand::distributions::WeightedIndex;
-use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
-use std::env;
-use std::fs::File;
-use std::io::{Cursor, Write};
 
 #[derive(Copy, Clone)]
 struct Color(u8, u8, u8);
@@ -24,8 +23,8 @@ fn generate_header<T: Write>(writer: &mut T, width: usize, height: usize) {
     writer.write(format!("P3\n{} {}\n255", width, height).as_bytes());
 }
 
-fn write_color<T: Write>(color: Color) -> impl Fn(&mut T) {
-    move |writer: &mut T| {
+fn write_color<'a, T: 'a + Write>(writer: &'a mut T) -> impl FnMut(Color) + 'a {
+    move |color: Color| {
         writer.write(format!("\n{} {} {}", color.0, color.1, color.2).as_bytes());
     }
 }
@@ -57,6 +56,35 @@ fn read_image<T: AsRef<[u8]>>(data: T) -> DynamicImage {
         .expect("Invalid format")
 }
 
+fn convert_index(width: usize) -> impl Fn(usize, usize) -> usize {
+    move |line, column| width * line + column
+}
+
+fn generate_image(
+    image_width: usize,
+    image_height: usize,
+    image: Vec<Color>,
+) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+    let mut image_bytes = Vec::<u8>::new();
+
+    generate_header(&mut image_bytes, image_width, image_height);
+
+    for c in image.iter() {
+        write_color(&mut image_bytes)(*c);
+    }
+
+    let image = read_image(image_bytes);
+
+    let scale = 10;
+
+    image::imageops::resize(
+        &image,
+        image_width as u32 * scale,
+        image_height as u32 * scale,
+        FilterType::Nearest,
+    )
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -78,46 +106,32 @@ fn main() {
     let dist = WeightedIndex::new(&color_weights).unwrap();
 
     let mut rng = thread_rng();
-    let mut image = Vec::<u8>::new();
 
-    generate_header(&mut image, image_width, image_height);
+    let mut image = Vec::<Color>::with_capacity(image_width * image_height);
+    image.resize(image_width * image_height, Color::default());
+
+    let index_converter = convert_index(image_width);
 
     for line in 0..image_height {
-        let mut image_line = Vec::<Color>::with_capacity(image_width);
-        image_line.resize(image_width, Color::default());
-
         if line % (sprite_height + margin) != 0 {
             for sprite_column in 0..sprite_columns {
                 let start = sprite_column * (sprite_width + margin) + 1;
                 let end = start + sprite_width;
 
                 for column in start..(start + end + 1) / 2 {
-                    // let color = colors[dist.sample(&mut rng)];
                     let color = colors[rng.sample(dist.clone())];
 
                     let index = column;
                     let sym_index = start + (end - 1 - column);
 
-                    image_line[index] = color;
-                    image_line[sym_index] = color;
+                    image[index_converter(line, index)] = color;
+                    image[index_converter(line, sym_index)] = color;
                 }
             }
         }
-
-        for c in image_line.iter() {
-            write_color(*c)(&mut image);
-        }
     }
 
-    let scale = 10;
-
-    let image = read_image(image);
-    let image = image::imageops::resize(
-        &image,
-        image_width as u32 * scale,
-        image_height as u32 * scale,
-        FilterType::Nearest,
-    );
+    let image = generate_image(image_width, image_height, image);
 
     image.save("image.png");
 }
