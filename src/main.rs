@@ -105,8 +105,10 @@ fn main() {
 
     let mut rng = thread_rng();
 
-    let mut image = Vec::<Color>::with_capacity(image_width * image_height);
-    image.resize(image_width * image_height, Color::default());
+    let mut image: Vec<Color> = (0..image_width * image_height)
+        .into_iter()
+        .map(|_| Color::default())
+        .collect();
 
     let index_converter = convert_index(image_width);
 
