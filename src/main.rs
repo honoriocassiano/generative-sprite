@@ -91,7 +91,7 @@ fn main() {
     let sprite_width = args[1].parse::<usize>().unwrap();
     let sprite_height = args[2].parse::<usize>().unwrap();
 
-    let margin: usize = 1;
+    let margin = 1;
 
     let sprite_columns = args[3].parse::<usize>().unwrap();
     let sprite_lines = args[4].parse::<usize>().unwrap();
@@ -99,25 +99,21 @@ fn main() {
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
 
-    let color_weights = [5, 1, 1, 1, 1, 1];
-
-    let dist = WeightedIndex::new(&color_weights).unwrap();
-
-    let mut rng = thread_rng();
-
     let mut image: Vec<Color> = (0..image_width * image_height)
         .into_iter()
         .map(|_| Color::default())
         .collect();
 
-    let index_converter = convert_index(image_width);
-
-    let mut palettes: Vec<usize> = (0..sprite_lines * sprite_columns)
+    let mut rng = thread_rng();
+    let palettes: Vec<usize> = (0..sprite_lines * sprite_columns)
         .into_iter()
         .map(|_| rng.gen_range(0..PALETTES.len()))
         .collect();
 
+    let index_converter = convert_index(image_width);
     let palette_index_converter = convert_index(sprite_columns);
+
+    let dist = WeightedIndex::new(&[5, 1, 1, 1, 1, 1]).unwrap();
 
     for sprite_line in 0..sprite_lines {
         let start_line = sprite_line * (sprite_height + margin) + 1;
