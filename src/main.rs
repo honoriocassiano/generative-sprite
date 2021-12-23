@@ -9,7 +9,7 @@ use std::fs::File;
 use std::io::{Cursor, Write};
 
 #[derive(Copy, Clone)]
-struct Color(u32, u32, u32);
+struct Color(u8, u8, u8);
 
 #[derive(Copy, Clone)]
 struct Size(u32, u32);
