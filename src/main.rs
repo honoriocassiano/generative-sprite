@@ -20,12 +20,16 @@ impl Default for Color {
 }
 
 fn generate_header<T: Write>(writer: &mut T, width: usize, height: usize) {
-    writer.write(format!("P3\n{} {}\n255", width, height).as_bytes());
+    writer
+        .write(format!("P3\n{} {}\n255", width, height).as_bytes())
+        .expect("Unable to generate header");
 }
 
 fn write_color<'a, T: 'a + Write>(writer: &'a mut T) -> impl FnMut(Color) + 'a {
     move |color: Color| {
-        writer.write(format!("\n{} {} {}", color.0, color.1, color.2).as_bytes());
+        writer
+            .write(format!("\n{} {} {}", color.0, color.1, color.2).as_bytes())
+            .expect("Unable to generate header");
     }
 }
 
@@ -142,5 +146,5 @@ fn main() {
 
     let image = generate_image(image_width, image_height, image);
 
-    image.save("image.png");
+    image.save("image.png").expect("Unable to save image.png");
 }
