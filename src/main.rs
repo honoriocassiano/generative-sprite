@@ -112,17 +112,20 @@ fn main() {
 
     let index_converter = convert_index(image_width);
 
-    for line in 0..image_height {
-        if line % (sprite_height + margin) != 0 {
-            for sprite_column in 0..sprite_columns {
-                let start = sprite_column * (sprite_width + margin) + 1;
-                let end = start + sprite_width;
+    for sprite_line in 0..sprite_lines {
+        let start_line = sprite_line * (sprite_height + margin) + 1;
+        let end_line = start_line + sprite_height;
 
-                for column in start..(start + end + 1) / 2 {
+        for line in start_line..end_line {
+            for sprite_column in 0..sprite_columns {
+                let start_column = sprite_column * (sprite_width + margin) + 1;
+                let end_column = start_column + sprite_width;
+
+                for column in start_column..(start_column + end_column + 1) / 2 {
                     let color = colors[rng.sample(dist.clone())];
 
                     let index = column;
-                    let sym_index = start + (end - 1 - column);
+                    let sym_index = start_column + (end_column - 1 - column);
 
                     image[index_converter(line, index)] = color;
                     image[index_converter(line, sym_index)] = color;
