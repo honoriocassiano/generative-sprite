@@ -99,8 +99,6 @@ fn main() {
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
 
-    let colors = PALETTES[1];
-
     let color_weights = [5, 1, 1, 1, 1, 1];
 
     let dist = WeightedIndex::new(&color_weights).unwrap();
@@ -112,6 +110,13 @@ fn main() {
 
     let index_converter = convert_index(image_width);
 
+    let mut palettes: Vec<usize> = (0..sprite_lines * sprite_columns)
+        .into_iter()
+        .map(|_| rng.gen_range(0..PALETTES.len()))
+        .collect();
+
+    let palette_index_converter = convert_index(sprite_columns);
+
     for sprite_line in 0..sprite_lines {
         let start_line = sprite_line * (sprite_height + margin) + 1;
         let end_line = start_line + sprite_height;
@@ -122,6 +127,9 @@ fn main() {
                 let end_column = start_column + sprite_width;
 
                 for column in start_column..(start_column + end_column + 1) / 2 {
+                    let colors =
+                        PALETTES[palettes[palette_index_converter(sprite_line, sprite_column)]];
+
                     let color = colors[rng.sample(dist.clone())];
 
                     let index = column;
