@@ -91,6 +91,7 @@ fn parse_palette_file(str: String) -> Vec<Vec<Color>> {
 }
 
 fn convert_index(width: usize) -> impl Fn(usize, usize) -> usize {
+    assert!(width > 0);
     move |line, column| width * line + column
 }
 
@@ -214,10 +215,16 @@ fn main() {
 }
 
 mod test {
-    use crate::{parse_palette_file, read_palettes, Color};
+    use crate::{convert_index, parse_palette_file, read_palettes, Color};
     use std::fs::{remove_file, File};
     use std::io::Write;
     use uuid::Uuid;
+
+    #[test]
+    #[should_panic]
+    fn test_convert_index_width_zero() {
+        convert_index(0)(1, 2);
+    }
 
     #[test]
     fn test_parse() {
