@@ -6,6 +6,7 @@ use image::io::Reader;
 use image::{DynamicImage, ImageBuffer, Rgba};
 use rand::distributions::WeightedIndex;
 use rand::{thread_rng, Rng};
+use regex::Regex;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 struct Color(u8, u8, u8);
@@ -59,6 +60,7 @@ fn read_image<T: AsRef<[u8]>>(data: T) -> DynamicImage {
 }
 
 fn parse_palette_file(str: String) -> Vec<Vec<Color>> {
+    let only_spaces_regex = Regex::new(r"\s+").unwrap();
     let lines = str.lines().map(|l| l.trim()).collect::<Vec<_>>();
 
     let mut palettes = Vec::<Vec<Color>>::new();
@@ -71,7 +73,7 @@ fn parse_palette_file(str: String) -> Vec<Vec<Color>> {
                 palette.clear();
             }
         } else {
-            let split = line.split(" ").collect::<Vec<_>>();
+            let split = only_spaces_regex.split(line).collect::<Vec<_>>();
 
             let r = split[0].parse::<u8>().unwrap();
             let g = split[1].parse::<u8>().unwrap();
@@ -203,7 +205,7 @@ mod test {
 
     #[test]
     fn test_parse() {
-        let str = "   \n  \n  1 2 3".to_owned();
+        let str = "   \n  \n  1 \t2    3".to_owned();
 
         let expected = vec![vec![Color(1, 2, 3)]];
 
