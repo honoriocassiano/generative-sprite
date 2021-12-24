@@ -214,6 +214,7 @@ mod test {
     use crate::{parse_palette_file, read_palettes, Color};
     use std::fs::{remove_file, File};
     use std::io::Write;
+    use uuid::Uuid;
 
     #[test]
     fn test_parse() {
@@ -230,13 +231,13 @@ mod test {
     fn test_parse_file() {
         let str = "   \n  \n  1 \t2    3";
 
-        let path = "temp-palettes";
-        let mut file = File::create(path).unwrap();
+        let path = Uuid::new_v4().to_string();
+        let mut file = File::create(path.as_str()).unwrap();
         file.write(str.as_bytes()).unwrap();
 
         let expected = vec![vec![Color(1, 2, 3)]];
 
-        let actual = read_palettes(path);
+        let actual = read_palettes(path.as_str());
 
         assert_eq!(expected, actual);
 
