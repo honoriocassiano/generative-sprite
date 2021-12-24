@@ -1,5 +1,5 @@
 use std::env;
-use std::io::{Cursor, Write};
+use std::io::{Cursor, Read, Write};
 
 use image::imageops::FilterType;
 use image::io::Reader;
@@ -7,6 +7,7 @@ use image::{DynamicImage, ImageBuffer, Rgba};
 use rand::distributions::WeightedIndex;
 use rand::{thread_rng, Rng};
 use regex::Regex;
+use std::fs::File;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 struct Color(u8, u8, u8);
@@ -140,6 +141,15 @@ fn parse_arguments(args: Vec<String>) -> Arguments {
     }
 }
 
+fn read_palettes(path: &str) -> Vec<Vec<Color>> {
+    let mut result = File::open(path).expect("Cannot read file");
+
+    let mut content = String::new();
+    result.read_to_string(&mut content);
+
+    parse_palette_file(content)
+}
+
 fn main() {
     let args = parse_arguments(env::args().collect());
 
@@ -201,7 +211,9 @@ fn main() {
 }
 
 mod test {
-    use crate::{parse_palette_file, Color};
+    use crate::{parse_palette_file, read_palettes, Color};
+    use std::fs::{remove_file, File};
+    use std::io::Write;
 
     #[test]
     fn test_parse() {
@@ -212,5 +224,22 @@ mod test {
         let actual = parse_palette_file(str);
 
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_parse_file() {
+        let str = "   \n  \n  1 \t2    3";
+
+        let path = "temp-palettes";
+        let mut file = File::create(path).unwrap();
+        file.write(str.as_bytes()).unwrap();
+
+        let expected = vec![vec![Color(1, 2, 3)]];
+
+        let actual = read_palettes(path);
+
+        assert_eq!(expected, actual);
+
+        remove_file(path);
     }
 }
