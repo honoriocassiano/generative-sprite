@@ -90,7 +90,7 @@ fn parse_palette_file(str: String) -> Vec<Vec<Color>> {
     palettes
 }
 
-fn convert_index(width: usize) -> impl Fn(usize, usize) -> usize {
+fn matrix_index_to_vec(width: usize) -> impl Fn(usize, usize) -> usize {
     assert!(width > 0);
     move |line, column| width * line + column
 }
@@ -175,8 +175,8 @@ fn main() {
         .map(|_| rng.gen_range(0..PALETTES.len()))
         .collect();
 
-    let index_converter = convert_index(image_width);
-    let palette_index_converter = convert_index(sprite_columns);
+    let index_converter = matrix_index_to_vec(image_width);
+    let palette_index_converter = matrix_index_to_vec(sprite_columns);
 
     let dist = WeightedIndex::new(&[1, 1, 1, 1, 1]).unwrap();
 
@@ -215,20 +215,20 @@ fn main() {
 }
 
 mod test {
-    use crate::{convert_index, parse_palette_file, read_palettes, Color};
+    use crate::{matrix_index_to_vec, parse_palette_file, read_palettes, Color};
     use std::fs::{remove_file, File};
     use std::io::Write;
     use uuid::Uuid;
 
     #[test]
     #[should_panic]
-    fn test_convert_index_width_zero() {
-        convert_index(0)(1, 2);
+    fn test_matrix_index_to_vec_width_zero() {
+        matrix_index_to_vec(0)(1, 2);
     }
 
     #[test]
-    fn test_convert_index() {
-        let converter = convert_index(2);
+    fn test_matrix_index_to_vec() {
+        let converter = matrix_index_to_vec(2);
 
         assert_eq!(0, converter(0, 0));
         assert_eq!(2, converter(1, 0));
