@@ -7,7 +7,7 @@ use image::{DynamicImage, ImageBuffer, Rgba};
 use rand::distributions::WeightedIndex;
 use rand::{thread_rng, Rng};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 struct Color(u8, u8, u8);
 
 #[derive(Copy, Clone)]
