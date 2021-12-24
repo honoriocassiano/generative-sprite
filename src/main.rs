@@ -251,22 +251,7 @@ fn main() {
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
 
-    let palettes = vec![
-        vec![
-            Color(161, 69, 111),
-            Color(59, 61, 221),
-            Color(154, 207, 31),
-            Color(28, 18, 228),
-            Color(255, 214, 48),
-        ],
-        vec![
-            Color(246, 147, 26),
-            Color(248, 100, 75),
-            Color(250, 51, 126),
-            Color(252, 28, 68),
-            Color(255, 0, 0),
-        ],
-    ];
+    let palettes = read_palettes("palettes");
 
     let image = generate_pixels(&args, margin, background, palettes);
     let image = generate_image(image_width, image_height, image);
