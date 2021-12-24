@@ -227,6 +227,15 @@ mod test {
     }
 
     #[test]
+    fn test_convert_index() {
+        let converter = convert_index(2);
+
+        assert_eq!(0, converter(0, 0));
+        assert_eq!(2, converter(1, 0));
+        assert_eq!(1, converter(0, 1));
+    }
+
+    #[test]
     fn test_parse() {
         let str = "   \n  \n  1 \t2    3".to_owned();
 
