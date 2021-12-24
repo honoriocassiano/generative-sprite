@@ -25,12 +25,10 @@ fn generate_header<T: Write>(writer: &mut T, width: usize, height: usize) {
         .expect("Unable to generate header");
 }
 
-fn write_color<'a, T: 'a + Write>(writer: &'a mut T) -> impl FnMut(Color) + 'a {
-    move |color: Color| {
-        writer
-            .write(format!("\n{} {} {}", color.0, color.1, color.2).as_bytes())
-            .expect("Unable to generate header");
-    }
+fn write_color<T: Write>(writer: &mut T, color: Color) {
+    writer
+        .write(format!("\n{} {} {}", color.0, color.1, color.2).as_bytes())
+        .expect("Unable to generate header");
 }
 
 const PALETTES: [[Color; 6]; 2] = [
@@ -74,7 +72,7 @@ fn generate_image(
     generate_header(&mut image_bytes, image_width, image_height);
 
     for c in image.iter() {
-        write_color(&mut image_bytes)(*c);
+        write_color(&mut image_bytes, *c);
     }
 
     let image = read_image(image_bytes);
