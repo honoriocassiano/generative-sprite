@@ -89,16 +89,37 @@ fn generate_image(
     )
 }
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
+struct Arguments {
+    pub sprite_width: usize,
+    pub sprite_height: usize,
+    pub sprite_columns: usize,
+    pub sprite_lines: usize,
+}
 
+fn parse_arguments(args: Vec<String>) -> Arguments {
     let sprite_width = args[1].parse::<usize>().unwrap();
     let sprite_height = args[2].parse::<usize>().unwrap();
+    let sprite_columns = args[3].parse::<usize>().unwrap();
+    let sprite_lines = args[4].parse::<usize>().unwrap();
+
+    Arguments {
+        sprite_width,
+        sprite_height,
+        sprite_lines,
+        sprite_columns,
+    }
+}
+
+fn main() {
+    let args = parse_arguments(env::args().collect());
 
     let margin = 1;
 
-    let sprite_columns = args[3].parse::<usize>().unwrap();
-    let sprite_lines = args[4].parse::<usize>().unwrap();
+    let sprite_width = args.sprite_width;
+    let sprite_height = args.sprite_height;
+
+    let sprite_columns = args.sprite_columns;
+    let sprite_lines = args.sprite_lines;
 
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
