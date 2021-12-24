@@ -190,20 +190,20 @@ fn main() {
                 let end_column = start_column + sprite_width;
 
                 for column in start_column..(start_column + end_column + 1) / 2 {
+                    if ![true, false].choose(&mut rng).unwrap() {
+                        continue;
+                    }
+
                     let colors =
                         PALETTES[palettes[palette_index_converter(sprite_line, sprite_column)]];
 
-                    let must_fill = *[true, false].choose(&mut rng).unwrap();
+                    let color = colors[rng.sample(dist.clone())];
 
-                    if must_fill {
-                        let color = colors[rng.sample(dist.clone())];
+                    let index = column;
+                    let sym_index = start_column + (end_column - 1 - column);
 
-                        let index = column;
-                        let sym_index = start_column + (end_column - 1 - column);
-
-                        image[index_converter(line, index)] = color;
-                        image[index_converter(line, sym_index)] = color;
-                    }
+                    image[index_converter(line, index)] = color;
+                    image[index_converter(line, sym_index)] = color;
                 }
             }
         }
