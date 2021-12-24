@@ -5,6 +5,7 @@ use image::imageops::FilterType;
 use image::io::Reader;
 use image::{DynamicImage, ImageBuffer, Rgba};
 use rand::distributions::WeightedIndex;
+use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use regex::Regex;
 use std::fs::File;
@@ -33,9 +34,8 @@ fn write_color<T: Write>(writer: &mut T, color: Color) {
         .expect("Unable to generate header");
 }
 
-const PALETTES: [[Color; 6]; 2] = [
+const PALETTES: [[Color; 5]; 2] = [
     [
-        Color(0, 0, 0),
         Color(161, 69, 111),
         Color(59, 61, 221),
         Color(154, 207, 31),
@@ -43,7 +43,6 @@ const PALETTES: [[Color; 6]; 2] = [
         Color(255, 214, 48),
     ],
     [
-        Color(0, 0, 0),
         Color(246, 147, 26),
         Color(248, 100, 75),
         Color(250, 51, 126),
@@ -178,7 +177,7 @@ fn main() {
     let index_converter = convert_index(image_width);
     let palette_index_converter = convert_index(sprite_columns);
 
-    let dist = WeightedIndex::new(&[5, 1, 1, 1, 1, 1]).unwrap();
+    let dist = WeightedIndex::new(&[1, 1, 1, 1, 1]).unwrap();
 
     for sprite_line in 0..sprite_lines {
         let start_line = sprite_line * (sprite_height + margin) + 1;
@@ -193,13 +192,17 @@ fn main() {
                     let colors =
                         PALETTES[palettes[palette_index_converter(sprite_line, sprite_column)]];
 
-                    let color = colors[rng.sample(dist.clone())];
+                    let must_fill = *[true, false].choose(&mut rng).unwrap();
 
-                    let index = column;
-                    let sym_index = start_column + (end_column - 1 - column);
+                    if must_fill {
+                        let color = colors[rng.sample(dist.clone())];
 
-                    image[index_converter(line, index)] = color;
-                    image[index_converter(line, sym_index)] = color;
+                        let index = column;
+                        let sym_index = start_column + (end_column - 1 - column);
+
+                        image[index_converter(line, index)] = color;
+                        image[index_converter(line, sym_index)] = color;
+                    }
                 }
             }
         }
