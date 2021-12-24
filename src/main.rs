@@ -58,6 +58,36 @@ fn read_image<T: AsRef<[u8]>>(data: T) -> DynamicImage {
         .expect("Invalid format")
 }
 
+fn parse_palette_file(str: String) -> Vec<Vec<Color>> {
+    let lines = str.lines().map(|l| l.trim()).collect::<Vec<_>>();
+
+    let mut palettes = Vec::<Vec<Color>>::new();
+    let mut palette = Vec::<Color>::new();
+
+    for line in lines {
+        if line.is_empty() {
+            if !palette.is_empty() {
+                palettes.push(palette.clone());
+                palette.clear();
+            }
+        } else {
+            let split = line.split(" ").collect::<Vec<_>>();
+
+            let r = split[0].parse::<u8>().unwrap();
+            let g = split[1].parse::<u8>().unwrap();
+            let b = split[2].parse::<u8>().unwrap();
+
+            palette.push(Color(r, g, b));
+        }
+    }
+
+    if !palette.is_empty() {
+        palettes.push(palette);
+    }
+
+    palettes
+}
+
 fn convert_index(width: usize) -> impl Fn(usize, usize) -> usize {
     move |line, column| width * line + column
 }
@@ -166,4 +196,19 @@ fn main() {
     let image = generate_image(image_width, image_height, image);
 
     image.save("image.png").expect("Unable to save image.png");
+}
+
+mod test {
+    use crate::{parse_palette_file, Color};
+
+    #[test]
+    fn test_parse() {
+        let str = "   \n  \n  1 2 3".to_owned();
+
+        let expected = vec![vec![Color(1, 2, 3)]];
+
+        let actual = parse_palette_file(str);
+
+        assert_eq!(expected, actual);
+    }
 }
