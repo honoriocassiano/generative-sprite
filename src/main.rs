@@ -34,23 +34,6 @@ fn write_color<T: Write>(writer: &mut T, color: Color) {
         .expect("Unable to generate header");
 }
 
-const PALETTES: [[Color; 5]; 2] = [
-    [
-        Color(161, 69, 111),
-        Color(59, 61, 221),
-        Color(154, 207, 31),
-        Color(28, 18, 228),
-        Color(255, 214, 48),
-    ],
-    [
-        Color(246, 147, 26),
-        Color(248, 100, 75),
-        Color(250, 51, 126),
-        Color(252, 28, 68),
-        Color(255, 0, 0),
-    ],
-];
-
 fn read_image<T: AsRef<[u8]>>(data: T) -> DynamicImage {
     Reader::new(Cursor::new(data))
         .with_guessed_format()
@@ -184,7 +167,11 @@ fn generate_sprite(width: usize, height: usize, background: Color, palette: &[Co
         .collect::<Vec<_>>()
 }
 
-fn generate_sprite_matrix(args: &Arguments, background: Color) -> Vec<Sprite> {
+fn generate_sprite_matrix(
+    args: &Arguments,
+    background: Color,
+    palettes: Vec<Vec<Color>>,
+) -> Vec<Sprite> {
     let sprite_height = args.sprite_height;
     let sprite_width = args.sprite_width;
     let sprite_columns = args.sprite_columns;
@@ -199,13 +186,18 @@ fn generate_sprite_matrix(args: &Arguments, background: Color) -> Vec<Sprite> {
                 sprite_width,
                 sprite_height,
                 background,
-                PALETTES.choose(&mut rng).unwrap(),
+                palettes.choose(&mut rng).unwrap(),
             )
         })
         .collect()
 }
 
-fn generate_pixels(args: &Arguments, margin: usize, background: Color) -> Vec<Color> {
+fn generate_pixels(
+    args: &Arguments,
+    margin: usize,
+    background: Color,
+    palettes: Vec<Vec<Color>>,
+) -> Vec<Color> {
     let sprite_height = args.sprite_height;
     let sprite_width = args.sprite_width;
     let sprite_columns = args.sprite_columns;
@@ -214,7 +206,7 @@ fn generate_pixels(args: &Arguments, margin: usize, background: Color) -> Vec<Co
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
 
-    let sprites = generate_sprite_matrix(&args, background);
+    let sprites = generate_sprite_matrix(&args, background, palettes);
 
     let mut image = vec![background].repeat(image_width * image_height);
 
@@ -259,7 +251,24 @@ fn main() {
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
 
-    let image = generate_pixels(&args, margin, background);
+    let palettes = vec![
+        vec![
+            Color(161, 69, 111),
+            Color(59, 61, 221),
+            Color(154, 207, 31),
+            Color(28, 18, 228),
+            Color(255, 214, 48),
+        ],
+        vec![
+            Color(246, 147, 26),
+            Color(248, 100, 75),
+            Color(250, 51, 126),
+            Color(252, 28, 68),
+            Color(255, 0, 0),
+        ],
+    ];
+
+    let image = generate_pixels(&args, margin, background, palettes);
     let image = generate_image(image_width, image_height, image);
 
     image.save("image.png").expect("Unable to save image.png");
