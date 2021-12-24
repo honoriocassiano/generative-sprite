@@ -1,4 +1,5 @@
 use std::env;
+use std::fs::File;
 use std::io::{Cursor, Read, Write};
 
 use image::imageops::FilterType;
@@ -8,7 +9,6 @@ use rand::distributions::WeightedIndex;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use regex::Regex;
-use std::fs::File;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 struct Color(u8, u8, u8);
@@ -95,6 +95,11 @@ fn matrix_index_to_vec(width: usize) -> impl Fn(usize, usize) -> usize {
     move |line, column| width * line + column
 }
 
+fn vec_index_to_matrix(width: usize) -> impl Fn(usize) -> (usize, usize) {
+    assert!(width > 0);
+    move |index| (index / width, index % width)
+}
+
 fn generate_image(
     image_width: usize,
     image_height: usize,
@@ -150,10 +155,100 @@ fn read_palettes(path: &str) -> Vec<Vec<Color>> {
     parse_palette_file(content)
 }
 
+type Sprite = Vec<Vec<Color>>;
+
+fn generate_sprite(width: usize, height: usize, background: Color, palette: &[Color]) -> Sprite {
+    let mut rng = thread_rng();
+
+    (0..height)
+        .into_iter()
+        .map(|_| {
+            let mut image_line = Vec::with_capacity(width);
+            image_line.resize(width, background);
+
+            for column in 0..(width + 1) / 2 {
+                if *[true, false].choose(&mut rng).unwrap() {
+                    // TODO Re-add weights
+                    let color = *palette.choose(&mut rng).unwrap();
+
+                    let index = column;
+                    let sym_index = (width - 1 - column);
+
+                    image_line[index] = color;
+                    image_line[sym_index] = color;
+                }
+            }
+
+            image_line
+        })
+        .collect::<Vec<_>>()
+}
+
+fn generate_sprite_matrix(args: &Arguments, background: Color) -> Vec<Sprite> {
+    let sprite_height = args.sprite_height;
+    let sprite_width = args.sprite_width;
+    let sprite_columns = args.sprite_columns;
+    let sprite_lines = args.sprite_lines;
+
+    let mut rng = thread_rng();
+
+    (0..sprite_columns * sprite_lines)
+        .into_iter()
+        .map(|_| {
+            generate_sprite(
+                sprite_width,
+                sprite_height,
+                background,
+                PALETTES.choose(&mut rng).unwrap(),
+            )
+        })
+        .collect()
+}
+
+fn generate_pixels(args: &Arguments, margin: usize, background: Color) -> Vec<Color> {
+    let sprite_height = args.sprite_height;
+    let sprite_width = args.sprite_width;
+    let sprite_columns = args.sprite_columns;
+    let sprite_lines = args.sprite_lines;
+
+    let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
+    let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
+
+    let sprites = generate_sprite_matrix(&args, background);
+
+    let mut image = vec![background].repeat(image_width * image_height);
+
+    let image_index_converter = matrix_index_to_vec(image_width);
+    let sprite_index_converter = vec_index_to_matrix(sprite_columns);
+
+    for sprite_index in 0..sprites.len() {
+        let (sprite_line, sprite_column) = sprite_index_converter(sprite_index);
+
+        let start_line = sprite_line * (sprite_height + margin) + margin;
+        let start_column = sprite_column * (sprite_width + margin) + margin;
+
+        let sprite = &sprites[sprite_index];
+
+        for sc in 0..sprite_width {
+            for sl in 0..sprite_height {
+                let l = start_line + sl;
+                let c = start_column + sc;
+
+                if (l < image_height) && (c < image_width) {
+                    image[image_index_converter(l, c)] = sprite[sl][sc];
+                }
+            }
+        }
+    }
+
+    image
+}
+
 fn main() {
     let args = parse_arguments(env::args().collect());
 
-    let margin = 1;
+    let margin = 2;
+    let background = Color::default();
 
     let sprite_width = args.sprite_width;
     let sprite_height = args.sprite_height;
@@ -164,61 +259,19 @@ fn main() {
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
 
-    let mut image: Vec<Color> = (0..image_width * image_height)
-        .into_iter()
-        .map(|_| Color::default())
-        .collect();
-
-    let mut rng = thread_rng();
-    let palettes: Vec<usize> = (0..sprite_lines * sprite_columns)
-        .into_iter()
-        .map(|_| rng.gen_range(0..PALETTES.len()))
-        .collect();
-
-    let index_converter = matrix_index_to_vec(image_width);
-    let palette_index_converter = matrix_index_to_vec(sprite_columns);
-
-    let dist = WeightedIndex::new(&[1, 1, 1, 1, 1]).unwrap();
-
-    for sprite_line in 0..sprite_lines {
-        let start_line = sprite_line * (sprite_height + margin) + 1;
-        let end_line = start_line + sprite_height;
-
-        for line in start_line..end_line {
-            for sprite_column in 0..sprite_columns {
-                let start_column = sprite_column * (sprite_width + margin) + 1;
-                let end_column = start_column + sprite_width;
-
-                for column in start_column..(start_column + end_column + 1) / 2 {
-                    if ![true, false].choose(&mut rng).unwrap() {
-                        continue;
-                    }
-
-                    let colors =
-                        PALETTES[palettes[palette_index_converter(sprite_line, sprite_column)]];
-
-                    let color = colors[rng.sample(dist.clone())];
-
-                    let index = column;
-                    let sym_index = start_column + (end_column - 1 - column);
-
-                    image[index_converter(line, index)] = color;
-                    image[index_converter(line, sym_index)] = color;
-                }
-            }
-        }
-    }
-
+    let image = generate_pixels(&args, margin, background);
     let image = generate_image(image_width, image_height, image);
 
     image.save("image.png").expect("Unable to save image.png");
 }
 
 mod test {
-    use crate::{matrix_index_to_vec, parse_palette_file, read_palettes, Color};
     use std::fs::{remove_file, File};
     use std::io::Write;
+
     use uuid::Uuid;
+
+    use crate::{matrix_index_to_vec, parse_palette_file, read_palettes, Color};
 
     #[test]
     #[should_panic]
