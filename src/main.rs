@@ -5,9 +5,8 @@ use std::io::{Cursor, Read, Write};
 use image::imageops::FilterType;
 use image::io::Reader;
 use image::{DynamicImage, ImageBuffer, Rgba};
-use rand::distributions::WeightedIndex;
 use rand::seq::SliceRandom;
-use rand::{thread_rng, Rng};
+use rand::thread_rng;
 use regex::Regex;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -133,7 +132,9 @@ fn read_palettes(path: &str) -> Vec<Vec<Color>> {
     let mut result = File::open(path).expect("Cannot read file");
 
     let mut content = String::new();
-    result.read_to_string(&mut content);
+    result
+        .read_to_string(&mut content)
+        .expect(format!("Unable to read {}", path).as_str());
 
     parse_palette_file(content)
 }
@@ -155,7 +156,7 @@ fn generate_sprite(width: usize, height: usize, background: Color, palette: &[Co
                     let color = *palette.choose(&mut rng).unwrap();
 
                     let index = column;
-                    let sym_index = (width - 1 - column);
+                    let sym_index = width - 1 - column;
 
                     image_line[index] = color;
                     image_line[sym_index] = color;
@@ -259,6 +260,7 @@ fn main() {
     image.save("image.png").expect("Unable to save image.png");
 }
 
+#[allow(unused_imports)]
 mod test {
     use std::fs::{remove_file, File};
     use std::io::Write;
