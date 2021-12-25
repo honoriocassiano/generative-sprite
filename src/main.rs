@@ -5,8 +5,9 @@ use std::io::{Cursor, Read, Write};
 use image::imageops::FilterType;
 use image::io::Reader;
 use image::{DynamicImage, ImageBuffer, Rgba};
+use rand::distributions::{Distribution, WeightedIndex};
 use rand::seq::SliceRandom;
-use rand::thread_rng;
+use rand::{thread_rng, Rng};
 use regex::Regex;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -151,12 +152,19 @@ fn generate_sprite(width: usize, height: usize, background: Color, palette: &[Co
             image_line.resize(width, background);
 
             for column in 0..(width + 1) / 2 {
-                if *[true, false].choose(&mut rng).unwrap() {
+                let index = column;
+                let sym_index = width - 1 - column;
+
+                let factor = (sym_index - index) as f32 / width as f32;
+
+                let weights =
+                    WeightedIndex::new(&[0.5 - 0.5 * factor, 0.5 + 0.5 * factor]).unwrap();
+
+                let values = [true, false];
+
+                if values[weights.sample(&mut rng)] {
                     // TODO Re-add weights
                     let color = *palette.choose(&mut rng).unwrap();
-
-                    let index = column;
-                    let sym_index = width - 1 - column;
 
                     image_line[index] = color;
                     image_line[sym_index] = color;
