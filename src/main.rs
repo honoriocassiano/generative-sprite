@@ -155,8 +155,7 @@ fn generate_sprite(
     (0..height)
         .into_iter()
         .map(|_| {
-            let mut image_line = Vec::with_capacity(width);
-            image_line.resize(width, background);
+            let mut image_line = vec![background].repeat(width);
 
             for column in 0..(width + 1) / 2 {
                 let index = column;
