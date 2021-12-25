@@ -1,3 +1,5 @@
+extern crate rand;
+
 use std::env;
 use std::fs::File;
 use std::io::{Cursor, Read, Write};
@@ -6,6 +8,7 @@ use image::imageops::FilterType;
 use image::io::Reader;
 use image::{DynamicImage, ImageBuffer, Rgba};
 use rand::distributions::{Distribution, WeightedIndex};
+use rand::prelude::ThreadRng;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use regex::Regex;
@@ -142,9 +145,13 @@ fn read_palettes(path: &str) -> Vec<Vec<Color>> {
 
 type Sprite = Vec<Vec<Color>>;
 
-fn generate_sprite(width: usize, height: usize, background: Color, palette: &[Color]) -> Sprite {
-    let mut rng = thread_rng();
-
+fn generate_sprite(
+    width: usize,
+    height: usize,
+    background: Color,
+    palette: &[Color],
+    mut rng: &mut ThreadRng,
+) -> Sprite {
     (0..height)
         .into_iter()
         .map(|_| {
@@ -180,23 +187,18 @@ fn generate_sprite_matrix(
     args: &Arguments,
     background: Color,
     palettes: Vec<Vec<Color>>,
+    mut rng: &mut ThreadRng,
 ) -> Vec<Sprite> {
     let sprite_height = args.sprite_height;
     let sprite_width = args.sprite_width;
     let sprite_columns = args.sprite_columns;
     let sprite_lines = args.sprite_lines;
 
-    let mut rng = thread_rng();
-
     (0..sprite_columns * sprite_lines)
         .into_iter()
         .map(|_| {
-            generate_sprite(
-                sprite_width,
-                sprite_height,
-                background,
-                palettes.choose(&mut rng).unwrap(),
-            )
+            let palette = palettes.choose(&mut rng).unwrap();
+            generate_sprite(sprite_width, sprite_height, background, palette, &mut rng)
         })
         .collect()
 }
@@ -206,6 +208,7 @@ fn generate_pixels(
     margin: usize,
     background: Color,
     palettes: Vec<Vec<Color>>,
+    mut rng: &mut ThreadRng,
 ) -> Vec<Color> {
     let sprite_height = args.sprite_height;
     let sprite_width = args.sprite_width;
@@ -215,7 +218,7 @@ fn generate_pixels(
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
 
-    let sprites = generate_sprite_matrix(&args, background, palettes);
+    let sprites = generate_sprite_matrix(&args, background, palettes, &mut rng);
 
     let mut image = vec![background].repeat(image_width * image_height);
 
@@ -262,10 +265,23 @@ fn main() {
 
     let palettes = read_palettes("palettes");
 
-    let image = generate_pixels(&args, margin, background, palettes);
+    let mut rng = thread_rng();
+
+    let mut seed: [u8; 32] = Default::default();
+    rng.fill(&mut seed);
+
+    let seed = seed
+        .iter()
+        .map(|t| format!("{:02x}", t))
+        .collect::<Vec<_>>()
+        .join("");
+
+    let image = generate_pixels(&args, margin, background, palettes, &mut rng);
     let image = generate_image(image_width, image_height, image);
 
-    image.save("image.png").expect("Unable to save image.png");
+    let filename = format!("image_{}.png", seed);
+
+    image.save(filename).expect("Unable to save file");
 }
 
 #[allow(unused_imports)]
