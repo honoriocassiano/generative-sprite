@@ -185,7 +185,7 @@ fn generate_sprite(
 fn generate_sprite_matrix(
     args: &Arguments,
     background: Color,
-    palettes: Vec<Vec<Color>>,
+    palettes: &Vec<Vec<Color>>,
     mut rng: &mut ThreadRng,
 ) -> Vec<Sprite> {
     let sprite_height = args.sprite_height;
@@ -204,9 +204,10 @@ fn generate_sprite_matrix(
 
 fn generate_pixels(
     args: &Arguments,
+    sprites: &Vec<Sprite>,
     margin: usize,
     background: Color,
-    palettes: Vec<Vec<Color>>,
+    palettes: &Vec<Vec<Color>>,
     mut rng: &mut ThreadRng,
 ) -> Vec<Color> {
     let sprite_height = args.sprite_height;
@@ -216,13 +217,6 @@ fn generate_pixels(
 
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
-
-    let sprites = generate_sprite_matrix(&args, background, palettes, &mut rng);
-
-    let sprites = sprites
-        .iter()
-        .map(|s| remove_lonely_pixels(s, sprite_width, sprite_height, background))
-        .collect::<Vec<_>>();
 
     let mut image = vec![background].repeat(image_width * image_height);
 
@@ -252,10 +246,15 @@ fn generate_pixels(
     image
 }
 
-fn remove_lonely_pixels(image: &Sprite, width: usize, height: usize, background: Color) -> Sprite {
+fn remove_lonely_pixels(
+    image: &Sprite,
+    width: usize,
+    height: usize,
+    margin: usize,
+    min_count: u32,
+    background: Color,
+) -> Sprite {
     let mut vec = image.clone();
-
-    let margin = 2;
 
     for line in 0..height {
         for column in 0..width {
@@ -265,17 +264,20 @@ fn remove_lonely_pixels(image: &Sprite, width: usize, height: usize, background:
             let start_column = column - (column.min(margin));
             let end_column = (column + margin + 1).min(width);
 
-            let count = (start_line..end_line).into_iter().fold(0, |acc, l| {
-                (start_column..end_column).into_iter().fold(0, |acc2, c| {
-                    if image[l][c] != background {
-                        acc2 + 1
-                    } else {
-                        acc2
-                    }
-                }) + acc
+            let count = (start_line..end_line).into_iter().fold(0u32, |acc, l| {
+                (start_column..end_column)
+                    .into_iter()
+                    .fold(0u32, |acc2, c| {
+                        if image[l][c] != background {
+                            acc2 + 1
+                        } else {
+                            acc2
+                        }
+                    })
+                    + acc
             });
 
-            if count < 8 {
+            if count < min_count {
                 vec[line][column] = background;
             }
         }
@@ -312,12 +314,20 @@ fn main() {
         .collect::<Vec<_>>()
         .join("");
 
-    let image = generate_pixels(&args, margin, background, palettes, &mut rng);
+    let sprites = generate_sprite_matrix(&args, background, &palettes, &mut rng)
+        .into_iter()
+        .map(|s| remove_lonely_pixels(&s, sprite_width, sprite_height, 2, 8, background))
+        .map(|s| remove_lonely_pixels(&s, sprite_width, sprite_height, 2, 4, background))
+        .collect::<Vec<_>>();
+
+    let image = generate_pixels(&args, &sprites, margin, background, &palettes, &mut rng);
     let image = generate_image(image_width, image_height, image);
 
     let filename = format!("image_{}.png", seed);
 
-    image.save(filename).expect("Unable to save file");
+    image.save(filename.clone()).expect("Unable to save file");
+
+    println!("Saved file {}", filename);
 }
 
 #[allow(unused_imports)]
@@ -403,7 +413,7 @@ mod test {
 
             v
         };
-        let actual = remove_lonely_pixels(&image, width, height, Color::default());
+        let actual = remove_lonely_pixels(&image, width, height, 2, 8, Color::default());
 
         assert_eq!(actual, expected);
     }
