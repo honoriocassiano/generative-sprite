@@ -219,6 +219,11 @@ fn generate_pixels(
 
     let sprites = generate_sprite_matrix(&args, background, palettes, &mut rng);
 
+    let sprites = sprites
+        .iter()
+        .map(|s| remove_lonely_pixels(s, sprite_width, sprite_height, background))
+        .collect::<Vec<_>>();
+
     let mut image = vec![background].repeat(image_width * image_height);
 
     let image_index_converter = matrix_index_to_vec(image_width);
@@ -245,6 +250,38 @@ fn generate_pixels(
     }
 
     image
+}
+
+fn remove_lonely_pixels(image: &Sprite, width: usize, height: usize, background: Color) -> Sprite {
+    let mut vec = image.clone();
+
+    let margin = 2;
+
+    for line in 0..height {
+        for column in 0..width {
+            let start_line = line - (line.min(margin));
+            let end_line = (line + margin + 1).min(height);
+
+            let start_column = column - (column.min(margin));
+            let end_column = (column + margin + 1).min(width);
+
+            let count = (start_line..end_line).into_iter().fold(0, |acc, l| {
+                (start_column..end_column).into_iter().fold(0, |acc2, c| {
+                    if image[l][c] != background {
+                        acc2 + 1
+                    } else {
+                        acc2
+                    }
+                }) + acc
+            });
+
+            if count < 8 {
+                vec[line][column] = background;
+            }
+        }
+    }
+
+    vec
 }
 
 fn main() {
@@ -290,7 +327,9 @@ mod test {
 
     use uuid::Uuid;
 
-    use crate::{matrix_index_to_vec, parse_palette_file, read_palettes, Color};
+    use crate::{
+        matrix_index_to_vec, parse_palette_file, read_palettes, remove_lonely_pixels, Color,
+    };
 
     #[test]
     #[should_panic]
@@ -333,5 +372,39 @@ mod test {
         assert_eq!(expected, actual);
 
         remove_file(path);
+    }
+
+    #[test]
+    fn test_remove_lonely_pixels() {
+        let width = 5;
+        let height = 5;
+
+        let vec_size = width * height;
+
+        let expected = (0..height)
+            .into_iter()
+            .map(|l| vec![Color::default()].repeat(width))
+            .collect::<Vec<_>>();
+
+        let image = {
+            let mut vec1 = {
+                let mut vec2 = vec![Color::default()].repeat(vec_size);
+
+                vec2[13] = Color(255, 0, 0);
+
+                vec2
+            };
+
+            let mut v = Vec::with_capacity(height);
+
+            for c in vec1.chunks(width) {
+                v.push(Vec::from(c));
+            }
+
+            v
+        };
+        let actual = remove_lonely_pixels(&image, width, height, Color::default());
+
+        assert_eq!(actual, expected);
     }
 }
