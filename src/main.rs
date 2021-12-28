@@ -193,8 +193,8 @@ fn generate_sprite(
     background: Color,
     palette: &[Color],
     mut rng: &mut ThreadRng,
-) -> Vec<Color> {
-    (0..height)
+) -> Sprite {
+    let data = (0..height)
         .into_iter()
         .flat_map(|_| {
             let mut image_line = vec![background].repeat(width);
@@ -221,7 +221,9 @@ fn generate_sprite(
 
             image_line
         })
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+
+    Sprite::new(width, height, data)
 }
 
 fn generate_sprite_matrix(
@@ -240,6 +242,8 @@ fn generate_sprite_matrix(
         .map(|_| {
             let palette = palettes.choose(&mut rng).unwrap();
             generate_sprite(sprite_width, sprite_height, background, palette, &mut rng)
+                .data()
+                .clone()
         })
         .collect()
 }
