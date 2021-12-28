@@ -295,12 +295,10 @@ fn remove_lonely_pixels(
     min_count: u32,
     background: Color,
 ) -> Sprite {
-    let width = sprite.width;
-    let height = sprite.height;
+    let width = sprite.width();
+    let height = sprite.height();
 
-    let mut vec = sprite.data().clone();
-
-    let index_converter = matrix_index_to_vec(width);
+    let mut new_sprite = sprite.clone();
 
     for line in 0..height {
         for column in 0..width {
@@ -324,12 +322,12 @@ fn remove_lonely_pixels(
             });
 
             if count < min_count {
-                vec[index_converter(line, column)] = background;
+                new_sprite.set_at(line, column, background);
             }
         }
     }
 
-    Sprite::new(width, height, vec)
+    new_sprite
 }
 
 fn main() {
