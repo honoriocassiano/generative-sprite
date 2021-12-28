@@ -143,18 +143,16 @@ fn read_palettes(path: &str) -> Vec<Vec<Color>> {
     parse_palette_file(content)
 }
 
-type Sprite = Vec<Vec<Color>>;
-
 fn generate_sprite(
     width: usize,
     height: usize,
     background: Color,
     palette: &[Color],
     mut rng: &mut ThreadRng,
-) -> Sprite {
+) -> Vec<Color> {
     (0..height)
         .into_iter()
-        .map(|_| {
+        .flat_map(|_| {
             let mut image_line = vec![background].repeat(width);
 
             for column in 0..(width + 1) / 2 {
@@ -187,7 +185,7 @@ fn generate_sprite_matrix(
     background: Color,
     palettes: &Vec<Vec<Color>>,
     mut rng: &mut ThreadRng,
-) -> Vec<Sprite> {
+) -> Vec<Vec<Color>> {
     let sprite_height = args.sprite_height;
     let sprite_width = args.sprite_width;
     let sprite_columns = args.sprite_columns;
@@ -204,7 +202,7 @@ fn generate_sprite_matrix(
 
 fn generate_pixels(
     args: &Arguments,
-    sprites: &Vec<Sprite>,
+    sprites: &Vec<Vec<Color>>,
     margin: usize,
     background: Color,
     palettes: &Vec<Vec<Color>>,
@@ -231,13 +229,15 @@ fn generate_pixels(
 
         let sprite = &sprites[sprite_index];
 
+        let index_converter = matrix_index_to_vec(sprite_width);
+
         for sc in 0..sprite_width {
             for sl in 0..sprite_height {
                 let l = start_line + sl;
                 let c = start_column + sc;
 
                 if (l < image_height) && (c < image_width) {
-                    image[image_index_converter(l, c)] = sprite[sl][sc];
+                    image[image_index_converter(l, c)] = sprite[index_converter(sl, sc)];
                 }
             }
         }
@@ -247,14 +247,16 @@ fn generate_pixels(
 }
 
 fn remove_lonely_pixels(
-    image: &Sprite,
+    image: &Vec<Color>,
     width: usize,
     height: usize,
     margin: usize,
     min_count: u32,
     background: Color,
-) -> Sprite {
+) -> Vec<Color> {
     let mut vec = image.clone();
+
+    let index_converter = matrix_index_to_vec(width);
 
     for line in 0..height {
         for column in 0..width {
@@ -268,7 +270,7 @@ fn remove_lonely_pixels(
                 (start_column..end_column)
                     .into_iter()
                     .fold(0u32, |acc2, c| {
-                        if image[l][c] != background {
+                        if image[index_converter(l, c)] != background {
                             acc2 + 1
                         } else {
                             acc2
@@ -278,7 +280,7 @@ fn remove_lonely_pixels(
             });
 
             if count < min_count {
-                vec[line][column] = background;
+                vec[index_converter(line, column)] = background;
             }
         }
     }
@@ -391,28 +393,16 @@ mod test {
 
         let vec_size = width * height;
 
-        let expected = (0..height)
-            .into_iter()
-            .map(|l| vec![Color::default()].repeat(width))
-            .collect::<Vec<_>>();
+        let expected = vec![Color::default()].repeat(width * height);
 
         let image = {
-            let mut vec1 = {
-                let mut vec2 = vec![Color::default()].repeat(vec_size);
+            let mut vec2 = vec![Color::default()].repeat(vec_size);
 
-                vec2[13] = Color(255, 0, 0);
+            vec2[13] = Color(255, 0, 0);
 
-                vec2
-            };
-
-            let mut v = Vec::with_capacity(height);
-
-            for c in vec1.chunks(width) {
-                v.push(Vec::from(c));
-            }
-
-            v
+            vec2
         };
+
         let actual = remove_lonely_pixels(&image, width, height, 2, 8, Color::default());
 
         assert_eq!(actual, expected);
