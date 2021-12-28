@@ -451,4 +451,16 @@ mod test {
 
         assert_eq!(actual, expected);
     }
+
+    #[test]
+    fn should_generate_solid_color_sprite() {
+        let width = 5;
+        let height = 5;
+        let color = Color(255, 0, 0);
+        let expected = vec![color].repeat(width * height);
+
+        let sprite = Sprite::from_color(width, height, color);
+
+        assert_eq!(*sprite.data(), expected);
+    }
 }
