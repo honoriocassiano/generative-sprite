@@ -249,7 +249,7 @@ fn generate_sprite_matrix(
 
 fn generate_pixels(
     args: &Arguments,
-    sprites: &Vec<Vec<Color>>,
+    sprites: &Vec<Sprite>,
     margin: usize,
     background: Color,
     palettes: &Vec<Vec<Color>>,
@@ -276,15 +276,13 @@ fn generate_pixels(
 
         let sprite = &sprites[sprite_index];
 
-        let index_converter = matrix_index_to_vec(sprite_width);
-
         for sc in 0..sprite_width {
             for sl in 0..sprite_height {
                 let l = start_line + sl;
                 let c = start_column + sc;
 
                 if (l < image_height) && (c < image_width) {
-                    image[image_index_converter(l, c)] = sprite[index_converter(sl, sc)];
+                    image[image_index_converter(l, c)] = sprite.get_at(sl, sc);
                 }
             }
         }
@@ -368,7 +366,6 @@ fn main() {
         .into_iter()
         .map(|s| remove_lonely_pixels(&s, 2, 8, background))
         .map(|s| remove_lonely_pixels(&s, 2, 4, background))
-        .map(|s| s.data().clone())
         .collect::<Vec<_>>();
 
     let image = generate_pixels(&args, &sprites, margin, background, &palettes, &mut rng);
