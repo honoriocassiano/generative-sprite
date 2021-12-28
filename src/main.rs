@@ -118,6 +118,7 @@ struct Arguments {
     pub sprite_lines: usize,
 }
 
+#[derive(Debug, Eq, PartialEq)]
 struct Sprite {
     width: usize,
     height: usize,
