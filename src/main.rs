@@ -232,7 +232,7 @@ fn generate_sprite_matrix(
     background: Color,
     palettes: &Vec<Vec<Color>>,
     mut rng: &mut ThreadRng,
-) -> Vec<Vec<Color>> {
+) -> Vec<Sprite> {
     let sprite_height = args.sprite_height;
     let sprite_width = args.sprite_width;
     let sprite_columns = args.sprite_columns;
@@ -243,8 +243,6 @@ fn generate_sprite_matrix(
         .map(|_| {
             let palette = palettes.choose(&mut rng).unwrap();
             generate_sprite(sprite_width, sprite_height, background, palette, &mut rng)
-                .data()
-                .clone()
         })
         .collect()
 }
@@ -296,14 +294,15 @@ fn generate_pixels(
 }
 
 fn remove_lonely_pixels(
-    image: &Vec<Color>,
-    width: usize,
-    height: usize,
+    sprite: &Sprite,
     margin: usize,
     min_count: u32,
     background: Color,
-) -> Vec<Color> {
-    let mut vec = image.clone();
+) -> Sprite {
+    let width = sprite.width;
+    let height = sprite.height;
+
+    let mut vec = sprite.data().clone();
 
     let index_converter = matrix_index_to_vec(width);
 
@@ -319,7 +318,7 @@ fn remove_lonely_pixels(
                 (start_column..end_column)
                     .into_iter()
                     .fold(0u32, |acc2, c| {
-                        if image[index_converter(l, c)] != background {
+                        if sprite.get_at(l, c) != background {
                             acc2 + 1
                         } else {
                             acc2
@@ -334,7 +333,7 @@ fn remove_lonely_pixels(
         }
     }
 
-    vec
+    Sprite::new(width, height, vec)
 }
 
 fn main() {
@@ -367,8 +366,9 @@ fn main() {
 
     let sprites = generate_sprite_matrix(&args, background, &palettes, &mut rng)
         .into_iter()
-        .map(|s| remove_lonely_pixels(&s, sprite_width, sprite_height, 2, 8, background))
-        .map(|s| remove_lonely_pixels(&s, sprite_width, sprite_height, 2, 4, background))
+        .map(|s| remove_lonely_pixels(&s, 2, 8, background))
+        .map(|s| remove_lonely_pixels(&s, 2, 4, background))
+        .map(|s| s.data().clone())
         .collect::<Vec<_>>();
 
     let image = generate_pixels(&args, &sprites, margin, background, &palettes, &mut rng);
@@ -389,7 +389,7 @@ mod test {
     use uuid::Uuid;
 
     use crate::{
-        matrix_index_to_vec, parse_palette_file, read_palettes, remove_lonely_pixels, Color,
+        matrix_index_to_vec, parse_palette_file, read_palettes, remove_lonely_pixels, Color, Sprite,
     };
 
     #[test]
@@ -442,9 +442,9 @@ mod test {
 
         let vec_size = width * height;
 
-        let expected = vec![Color::default()].repeat(width * height);
+        let expected = Sprite::new(width, height, vec![Color::default()].repeat(width * height));
 
-        let image = {
+        let data = {
             let mut vec2 = vec![Color::default()].repeat(vec_size);
 
             vec2[13] = Color(255, 0, 0);
@@ -452,7 +452,9 @@ mod test {
             vec2
         };
 
-        let actual = remove_lonely_pixels(&image, width, height, 2, 8, Color::default());
+        let image = Sprite::new(width, height, data);
+
+        let actual = remove_lonely_pixels(&image, 2, 8, Color::default());
 
         assert_eq!(actual, expected);
     }
