@@ -425,7 +425,7 @@ mod test {
 
         assert_eq!(expected, actual);
 
-        remove_file(path);
+        remove_file(path).unwrap();
     }
 
     #[test]
