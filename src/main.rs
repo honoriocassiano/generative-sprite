@@ -252,8 +252,6 @@ fn generate_pixels(
     sprites: &Vec<Sprite>,
     margin: usize,
     background: Color,
-    palettes: &Vec<Vec<Color>>,
-    mut rng: &mut ThreadRng,
 ) -> Vec<Color> {
     let sprite_height = args.sprite_height;
     let sprite_width = args.sprite_width;
@@ -368,7 +366,7 @@ fn main() {
         .map(|s| remove_lonely_pixels(&s, 2, 4, background))
         .collect::<Vec<_>>();
 
-    let image = generate_pixels(&args, &sprites, margin, background, &palettes, &mut rng);
+    let image = generate_pixels(&args, &sprites, margin, background);
     let image = generate_image(image_width, image_height, image);
 
     let filename = format!("image_{}.png", seed);
