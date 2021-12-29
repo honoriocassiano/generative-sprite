@@ -9,4 +9,6 @@ edition = "2018"
 rand = "0.8.4"
 image = "0.23.14"
 regex = "1.5.4"
+
+[dev-dependencies]
 uuid = { version = "0.8", features = ["serde", "v4"] }

@@ -329,8 +329,6 @@ mod test {
     use std::fs::{remove_file, File};
     use std::io::Write;
 
-    use uuid::Uuid;
-
     use crate::sprite::{Color, Sprite};
     use crate::{matrix_index_to_vec, parse_palette_file, read_palettes, remove_lonely_pixels};
 
@@ -362,6 +360,8 @@ mod test {
 
     #[test]
     fn test_parse_file() {
+        use uuid::Uuid;
+
         let str = "   \n  \n  1 \t2    3";
 
         let path = Uuid::new_v4().to_string();
