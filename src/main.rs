@@ -326,20 +326,19 @@ fn main() {
 
 #[allow(unused_imports)]
 mod test {
-    use std::fs::{remove_file, File};
-    use std::io::Write;
-
-    use crate::sprite::{Color, Sprite};
-    use crate::{matrix_index_to_vec, parse_palette_file, read_palettes, remove_lonely_pixels};
 
     #[test]
     #[should_panic]
     fn test_matrix_index_to_vec_width_zero() {
+        use crate::matrix_index_to_vec;
+
         matrix_index_to_vec(0)(1, 2);
     }
 
     #[test]
     fn test_matrix_index_to_vec() {
+        use crate::matrix_index_to_vec;
+
         let converter = matrix_index_to_vec(2);
 
         assert_eq!(0, converter(0, 0));
@@ -349,6 +348,10 @@ mod test {
 
     #[test]
     fn test_parse() {
+        use crate::parse_palette_file;
+
+        use crate::sprite::Color;
+
         let str = "   \n  \n  1 \t2    3".to_owned();
 
         let expected = vec![vec![Color(1, 2, 3)]];
@@ -360,7 +363,13 @@ mod test {
 
     #[test]
     fn test_parse_file() {
+        use std::fs::{remove_file, File};
+        use std::io::Write;
+
         use uuid::Uuid;
+
+        use crate::read_palettes;
+        use crate::sprite::{Color, Sprite};
 
         let str = "   \n  \n  1 \t2    3";
 
@@ -379,6 +388,8 @@ mod test {
 
     #[test]
     fn test_remove_lonely_pixels() {
+        use crate::{remove_lonely_pixels, Color, Sprite};
+
         let width = 5;
         let height = 5;
 
@@ -403,6 +414,8 @@ mod test {
 
     #[test]
     fn should_generate_solid_color_sprite() {
+        use crate::{Color, Sprite};
+
         let width = 5;
         let height = 5;
         let color = Color(255, 0, 0);
