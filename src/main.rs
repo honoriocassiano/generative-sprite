@@ -13,17 +13,12 @@ use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use regex::Regex;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-struct Color(u8, u8, u8);
+use sprite::{Color, Sprite};
+
+mod sprite;
 
 #[derive(Copy, Clone)]
 struct Size(u32, u32);
-
-impl Default for Color {
-    fn default() -> Self {
-        Self(0, 0, 0)
-    }
-}
 
 fn generate_header<T: Write>(writer: &mut T, width: usize, height: usize) {
     writer
@@ -116,51 +111,6 @@ struct Arguments {
     pub sprite_height: usize,
     pub sprite_columns: usize,
     pub sprite_lines: usize,
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-struct Sprite {
-    width: usize,
-    height: usize,
-    data: Vec<Color>,
-}
-
-impl Sprite {
-    pub fn new(width: usize, height: usize, data: Vec<Color>) -> Self {
-        Self {
-            width,
-            height,
-            data,
-        }
-    }
-
-    pub fn from_color(width: usize, height: usize, default_color: Color) -> Self {
-        Self {
-            width,
-            height,
-            data: vec![default_color].repeat(width * height),
-        }
-    }
-
-    pub fn width(&self) -> usize {
-        self.width
-    }
-
-    pub fn height(&self) -> usize {
-        self.height
-    }
-
-    pub fn data(&self) -> &Vec<Color> {
-        &self.data
-    }
-
-    pub fn get_at(&self, line: usize, column: usize) -> Color {
-        self.data[matrix_index_to_vec(self.width)(line, column)]
-    }
-
-    pub fn set_at(&mut self, line: usize, column: usize, color: Color) {
-        self.data[matrix_index_to_vec(self.width)(line, column)] = color;
-    }
 }
 
 fn parse_arguments(args: Vec<String>) -> Arguments {
@@ -381,9 +331,8 @@ mod test {
 
     use uuid::Uuid;
 
-    use crate::{
-        matrix_index_to_vec, parse_palette_file, read_palettes, remove_lonely_pixels, Color, Sprite,
-    };
+    use crate::sprite::{Color, Sprite};
+    use crate::{matrix_index_to_vec, parse_palette_file, read_palettes, remove_lonely_pixels};
 
     #[test]
     #[should_panic]
