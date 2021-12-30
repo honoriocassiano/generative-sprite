@@ -113,6 +113,8 @@ struct Arguments {
     pub sprite_height: usize,
     pub sprite_columns: usize,
     pub sprite_lines: usize,
+
+    pub seed: Option<[u8; 32]>,
 }
 
 fn parse_arguments(args: Vec<String>) -> Arguments {
@@ -139,6 +141,13 @@ fn parse_arguments(args: Vec<String>) -> Arguments {
                 .required(true)
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("seed")
+                .help("Seed to use")
+                .short("s")
+                .long("seed")
+                .takes_value(true),
+        )
         .get_matches();
 
     let sprite_width = matches
@@ -162,11 +171,16 @@ fn parse_arguments(args: Vec<String>) -> Arguments {
         .parse::<usize>()
         .unwrap();
 
+    let seed = matches.value_of("seed").map(|h| parse_seed(h));
+
+    println!("{:?}", seed);
+
     Arguments {
         sprite_width,
         sprite_height,
         sprite_lines,
         sprite_columns,
+        seed,
     }
 }
 
