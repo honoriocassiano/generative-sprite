@@ -13,6 +13,7 @@ use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use regex::Regex;
 
+use clap::{App, Arg};
 use sprite::{Color, Sprite};
 
 mod sprite;
@@ -114,10 +115,51 @@ struct Arguments {
 }
 
 fn parse_arguments(args: Vec<String>) -> Arguments {
-    let sprite_width = args[1].parse::<usize>().unwrap();
-    let sprite_height = args[2].parse::<usize>().unwrap();
-    let sprite_columns = args[3].parse::<usize>().unwrap();
-    let sprite_lines = args[4].parse::<usize>().unwrap();
+    let matches = App::new("Generative")
+        .version("0.1.0")
+        .about("Generate random sprites")
+        .arg(
+            Arg::with_name("sprite-width")
+                .required(true)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("sprite-height")
+                .required(true)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("sprite-columns")
+                .required(true)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("sprite-lines")
+                .required(true)
+                .takes_value(true),
+        )
+        .get_matches();
+
+    let sprite_width = matches
+        .value_of("sprite-width")
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
+    let sprite_height = matches
+        .value_of("sprite-height")
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
+    let sprite_columns = matches
+        .value_of("sprite-columns")
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
+    let sprite_lines = matches
+        .value_of("sprite-lines")
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
 
     Arguments {
         sprite_width,
