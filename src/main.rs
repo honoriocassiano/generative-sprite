@@ -8,12 +8,12 @@ use image::imageops::FilterType;
 use image::io::Reader;
 use image::{DynamicImage, ImageBuffer, Rgba};
 use rand::distributions::{Distribution, WeightedIndex};
-use rand::prelude::ThreadRng;
 use rand::seq::SliceRandom;
-use rand::{thread_rng, Rng};
+use rand::{thread_rng, Rng, SeedableRng};
 use regex::Regex;
 
 use clap::{App, Arg};
+use rand::rngs::StdRng;
 use sprite::{Color, Sprite};
 use std::convert::TryInto;
 
@@ -213,12 +213,12 @@ fn read_palettes(path: &str) -> Vec<Vec<Color>> {
     parse_palette_file(content)
 }
 
-fn generate_sprite(
+fn generate_sprite<R: Rng>(
     width: usize,
     height: usize,
     background: Color,
     palette: &[Color],
-    mut rng: &mut ThreadRng,
+    mut rng: &mut R,
 ) -> Sprite {
     let data = (0..height)
         .into_iter()
@@ -252,11 +252,11 @@ fn generate_sprite(
     Sprite::new(width, height, data)
 }
 
-fn generate_sprite_matrix(
+fn generate_sprite_matrix<R: Rng>(
     args: &Arguments,
     background: Color,
     palettes: &Vec<Vec<Color>>,
-    mut rng: &mut ThreadRng,
+    mut rng: &mut R,
 ) -> Vec<Sprite> {
     let sprite_height = args.sprite_height;
     let sprite_width = args.sprite_width;
@@ -372,10 +372,19 @@ fn main() {
 
     let palettes = read_palettes("palettes");
 
-    let mut rng = thread_rng();
+    let seed = match args.seed {
+        Some(s) => s,
+        None => {
+            let mut rng = thread_rng();
+            let mut temp: [u8; 32] = Default::default();
 
-    let mut seed: [u8; 32] = Default::default();
-    rng.fill(&mut seed);
+            rng.fill(&mut temp);
+
+            temp
+        }
+    };
+
+    let mut rng = StdRng::from_seed(seed);
 
     let seed = seed
         .iter()
