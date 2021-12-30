@@ -15,6 +15,7 @@ use regex::Regex;
 
 use clap::{App, Arg};
 use sprite::{Color, Sprite};
+use std::convert::TryInto;
 
 mod sprite;
 
@@ -167,6 +168,24 @@ fn parse_arguments(args: Vec<String>) -> Arguments {
         sprite_lines,
         sprite_columns,
     }
+}
+
+fn parse_seed(hash: &str) -> [u8; 32] {
+    assert_eq!(hash.len(), 64, "Seed must have 32 bits");
+
+    let vec = hash
+        .chars()
+        .collect::<Vec<_>>()
+        .chunks(2)
+        .map(|c| {
+            let hex_number = c.iter().collect::<String>();
+
+            u8::from_str_radix(hex_number.as_str(), 16)
+                .expect(format!("Invalid byte '{}'", hex_number).as_str())
+        })
+        .collect::<Vec<_>>();
+
+    vec.try_into().unwrap()
 }
 
 fn read_palettes(path: &str) -> Vec<Vec<Color>> {
@@ -466,5 +485,21 @@ mod test {
         let sprite = Sprite::from_color(width, height, color);
 
         assert_eq!(*sprite.data(), expected);
+    }
+
+    #[test]
+    fn should_parse_seed() {
+        use crate::parse_seed;
+
+        let seed = "04ed394c85de2fe0f1b778d37cc029b6a1366f1aa26498fb123b4ac75d955e08";
+        let expected: [u8; 32] = [
+            0x04, 0xed, 0x39, 0x4c, 0x85, 0xde, 0x2f, 0xe0, 0xf1, 0xb7, 0x78, 0xd3, 0x7c, 0xc0,
+            0x29, 0xb6, 0xa1, 0x36, 0x6f, 0x1a, 0xa2, 0x64, 0x98, 0xfb, 0x12, 0x3b, 0x4a, 0xc7,
+            0x5d, 0x95, 0x5e, 0x08,
+        ];
+
+        let actual = parse_seed(seed);
+
+        assert_eq!(actual, expected);
     }
 }
