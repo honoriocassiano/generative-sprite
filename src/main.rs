@@ -114,6 +114,8 @@ struct Arguments {
     pub sprite_columns: usize,
     pub sprite_lines: usize,
 
+    pub margin: usize,
+
     pub seed: Option<[u8; 32]>,
 }
 
@@ -139,6 +141,14 @@ fn parse_arguments() -> Arguments {
         .arg(
             Arg::with_name("sprite-lines")
                 .required(true)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("margin")
+                .help("Size of margin between sprites")
+                .default_value("2")
+                .short("m")
+                .long("margin")
                 .takes_value(true),
         )
         .arg(
@@ -170,6 +180,12 @@ fn parse_arguments() -> Arguments {
         .unwrap()
         .parse::<usize>()
         .unwrap();
+    let margin = match matches.value_of("margin") {
+        None => 2,
+        Some(m) => m
+            .parse::<usize>()
+            .expect(format!("Invalid value: {}", m).as_str()),
+    };
 
     let seed = matches.value_of("seed").map(|h| parse_seed(h));
 
@@ -180,6 +196,7 @@ fn parse_arguments() -> Arguments {
         sprite_height,
         sprite_lines,
         sprite_columns,
+        margin,
         seed,
     }
 }
@@ -272,16 +289,12 @@ fn generate_sprite_matrix<R: Rng>(
         .collect()
 }
 
-fn generate_pixels(
-    args: &Arguments,
-    sprites: &Vec<Sprite>,
-    margin: usize,
-    background: Color,
-) -> Vec<Color> {
+fn generate_pixels(args: &Arguments, sprites: &Vec<Sprite>, background: Color) -> Vec<Color> {
     let sprite_height = args.sprite_height;
     let sprite_width = args.sprite_width;
     let sprite_columns = args.sprite_columns;
     let sprite_lines = args.sprite_lines;
+    let margin = args.margin;
 
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
@@ -358,7 +371,6 @@ fn remove_lonely_pixels(
 fn main() {
     let args = parse_arguments();
 
-    let margin = 2;
     let background = Color::default();
 
     let sprite_width = args.sprite_width;
@@ -366,6 +378,7 @@ fn main() {
 
     let sprite_columns = args.sprite_columns;
     let sprite_lines = args.sprite_lines;
+    let margin = args.margin;
 
     let image_width = sprite_width * sprite_columns + (sprite_columns + 1) * margin;
     let image_height = sprite_height * sprite_lines + (sprite_lines + 1) * margin;
@@ -398,7 +411,7 @@ fn main() {
         .map(|s| remove_lonely_pixels(&s, 2, 4, background))
         .collect::<Vec<_>>();
 
-    let image = generate_pixels(&args, &sprites, margin, background);
+    let image = generate_pixels(&args, &sprites, background);
     let image = generate_image(image_width, image_height, image);
 
     let filename = format!("image_{}.png", seed);
