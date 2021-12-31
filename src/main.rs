@@ -117,7 +117,7 @@ struct Arguments {
     pub seed: Option<[u8; 32]>,
 }
 
-fn parse_arguments(args: Vec<String>) -> Arguments {
+fn parse_arguments() -> Arguments {
     let matches = App::new("Generative")
         .version("0.1.0")
         .about("Generate random sprites")
@@ -356,7 +356,7 @@ fn remove_lonely_pixels(
 }
 
 fn main() {
-    let args = parse_arguments(env::args().collect());
+    let args = parse_arguments();
 
     let margin = 2;
     let background = Color::default();
