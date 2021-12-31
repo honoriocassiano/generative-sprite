@@ -1,6 +1,5 @@
 extern crate rand;
 
-use std::env;
 use std::fs::File;
 use std::io::{Cursor, Read, Write};
 
