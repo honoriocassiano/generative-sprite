@@ -420,7 +420,7 @@ fn main() {
     println!("Saved file {}", filename);
 }
 
-#[allow(unused_imports)]
+#[cfg(test)]
 mod test {
 
     #[test]
