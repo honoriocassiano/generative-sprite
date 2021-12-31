@@ -51,3 +51,20 @@ impl Sprite {
         self.data[crate::matrix_index_to_vec(self.width)(line, column)] = color;
     }
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn should_generate_solid_color_sprite() {
+        use crate::{Color, Sprite};
+
+        let width = 5;
+        let height = 5;
+        let color = Color(255, 0, 0);
+        let expected = vec![color].repeat(width * height);
+
+        let sprite = Sprite::from_color(width, height, color);
+
+        assert_eq!(*sprite.data(), expected);
+    }
+}
