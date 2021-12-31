@@ -164,27 +164,25 @@ fn parse_arguments() -> Arguments {
         .value_of("sprite-width")
         .unwrap()
         .parse::<usize>()
-        .unwrap();
+        .expect("Invalid sprite-width");
     let sprite_height = matches
         .value_of("sprite-height")
         .unwrap()
         .parse::<usize>()
-        .unwrap();
+        .expect("Invalid sprite-height");
     let sprite_columns = matches
         .value_of("sprite-columns")
         .unwrap()
         .parse::<usize>()
-        .unwrap();
+        .expect("Invalid sprite-columns");
     let sprite_lines = matches
         .value_of("sprite-lines")
         .unwrap()
         .parse::<usize>()
-        .unwrap();
+        .expect("Invalid sprite-lines");
     let margin = match matches.value_of("margin") {
         None => 2,
-        Some(m) => m
-            .parse::<usize>()
-            .expect(format!("Invalid value: {}", m).as_str()),
+        Some(m) => m.parse::<usize>().expect("Invalid margin"),
     };
 
     let seed = matches.value_of("seed").map(|h| parse_seed(h));
