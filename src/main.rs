@@ -125,21 +125,25 @@ fn parse_arguments() -> Arguments {
         .about("Generate random sprites")
         .arg(
             Arg::with_name("sprite-width")
+                .help("Width (in pixels) by sprite")
                 .required(true)
                 .takes_value(true),
         )
         .arg(
             Arg::with_name("sprite-height")
+                .help("Height (in pixels) by sprite")
                 .required(true)
                 .takes_value(true),
         )
         .arg(
             Arg::with_name("sprite-columns")
+                .help("Number of columns of sprites matrix")
                 .required(true)
                 .takes_value(true),
         )
         .arg(
             Arg::with_name("sprite-lines")
+                .help("Number of lines of sprites matrix")
                 .required(true)
                 .takes_value(true),
         )
