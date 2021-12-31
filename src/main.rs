@@ -120,7 +120,7 @@ struct Arguments {
 
 fn parse_arguments() -> Arguments {
     let matches = App::new("Generative")
-        .version("0.1.0")
+        .version(clap::crate_version!())
         .about("Generate random sprites")
         .arg(
             Arg::with_name("sprite-width")
