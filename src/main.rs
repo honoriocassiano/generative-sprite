@@ -465,7 +465,7 @@ mod test {
         use uuid::Uuid;
 
         use crate::read_palettes;
-        use crate::sprite::{Color, Sprite};
+        use crate::sprite::Color;
 
         let str = "   \n  \n  1 \t2    3";
 
