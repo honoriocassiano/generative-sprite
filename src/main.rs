@@ -187,8 +187,6 @@ fn parse_arguments() -> Arguments {
 
     let seed = matches.value_of("seed").map(|h| parse_seed(h));
 
-    println!("{:?}", seed);
-
     Arguments {
         sprite_width,
         sprite_height,
