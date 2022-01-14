@@ -11,7 +11,6 @@ use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng, thread_rng};
 use regex::Regex;
 
-use clap::{App, Arg};
 use rand::rngs::StdRng;
 use sprite::{Color, Sprite};
 use std::convert::TryInto;
@@ -277,7 +276,7 @@ fn remove_lonely_pixels(
 }
 
 fn main() {
-    let args = argparser::parse_arguments();
+    let args = argparser::parse_arguments(std::env::args_os());
 
     let background = Color::default();
 
@@ -331,7 +330,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     #[test]
     #[should_panic]
     fn test_matrix_index_to_vec_width_zero() {

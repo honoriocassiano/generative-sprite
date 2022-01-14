@@ -1,3 +1,4 @@
+use std::ffi::OsString;
 use clap::{App, Arg};
 
 pub struct Arguments {
@@ -11,7 +12,10 @@ pub struct Arguments {
     pub seed: Option<[u8; 32]>,
 }
 
-pub fn parse_arguments() -> Arguments {
+pub fn parse_arguments<I, T>(args: I) -> Arguments where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
     let matches = App::new("Generative")
         .version(clap::crate_version!())
         .about("Generate random sprites")
@@ -54,7 +58,7 @@ pub fn parse_arguments() -> Arguments {
                 .long("seed")
                 .takes_value(true),
         )
-        .get_matches();
+        .get_matches_from(args);
 
     let sprite_width = matches
         .value_of("sprite-width")
