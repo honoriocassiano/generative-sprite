@@ -96,3 +96,63 @@ pub fn parse_arguments<I, T>(args: I) -> Arguments where
         seed,
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::argparser::parse_arguments;
+
+    #[test]
+    fn should_parse_arguments_with_default_margin() {
+        let arg_list = vec!["generative", "1", "2", "3", "4"];
+
+        let args = parse_arguments(arg_list);
+
+        assert_eq!(1, args.sprite_width);
+        assert_eq!(2, args.sprite_height);
+        assert_eq!(3, args.sprite_columns);
+        assert_eq!(4, args.sprite_lines);
+        assert_eq!(2, args.margin);
+        assert_eq!(None, args.seed);
+    }
+
+    #[test]
+    fn should_parse_arguments_with_margin() {
+        let arg_list = vec!["generative", "1", "2", "3", "4", "-m", "5"];
+
+        let args = parse_arguments(arg_list);
+
+        assert_eq!(1, args.sprite_width);
+        assert_eq!(2, args.sprite_height);
+        assert_eq!(3, args.sprite_columns);
+        assert_eq!(4, args.sprite_lines);
+        assert_eq!(5, args.margin);
+        assert_eq!(None, args.seed);
+    }
+
+    #[test]
+    fn should_parse_arguments_with_seed() {
+        let arg_list = vec![
+            "generative",
+            "1",
+            "2",
+            "3",
+            "4",
+            "-s",
+            "f7b028003248f3ca4df45566c21edffc03629f488da3639b90e1f9566bcd8b62",
+        ];
+
+        let seed: [u8; 32] = [
+            0xf7, 0xb0, 0x28, 0x00, 0x32, 0x48, 0xf3, 0xca, 0x4d, 0xf4, 0x55, 0x66, 0xc2, 0x1e,
+            0xdf, 0xfc, 0x03, 0x62, 0x9f, 0x48, 0x8d, 0xa3, 0x63, 0x9b, 0x90, 0xe1, 0xf9, 0x56,
+            0x6b, 0xcd, 0x8b, 0x62,
+        ];
+        let args = parse_arguments(arg_list);
+
+        assert_eq!(1, args.sprite_width);
+        assert_eq!(2, args.sprite_height);
+        assert_eq!(3, args.sprite_columns);
+        assert_eq!(4, args.sprite_lines);
+        assert_eq!(2, args.margin);
+        assert_eq!(Some(seed), args.seed);
+    }
+}
