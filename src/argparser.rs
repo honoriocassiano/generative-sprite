@@ -104,7 +104,7 @@ mod test {
 
     #[test]
     fn should_parse_arguments_with_default_margin() {
-        let arg_list = vec!["generative", "1", "2", "3", "4"];
+        let arg_list = ["generative", "1", "2", "3", "4"];
 
         let args = parse_arguments(arg_list);
 
@@ -118,7 +118,7 @@ mod test {
 
     #[test]
     fn should_parse_arguments_with_margin() {
-        let arg_list = vec!["generative", "1", "2", "3", "4", "-m", "5"];
+        let arg_list = ["generative", "1", "2", "3", "4", "-m", "5"];
 
         let args = parse_arguments(arg_list);
 
@@ -132,7 +132,7 @@ mod test {
 
     #[test]
     fn should_parse_arguments_with_seed() {
-        let arg_list = vec![
+        let arg_list = [
             "generative",
             "1",
             "2",
