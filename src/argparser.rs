@@ -1,5 +1,5 @@
-use std::ffi::OsString;
 use clap::{App, Arg};
+use std::ffi::OsString;
 
 pub struct Arguments {
     pub sprite_width: usize,
@@ -12,7 +12,8 @@ pub struct Arguments {
     pub seed: Option<[u8; 32]>,
 }
 
-pub fn parse_arguments<I, T>(args: I) -> Arguments where
+pub fn parse_arguments<I, T>(args: I) -> Arguments
+where
     I: IntoIterator<Item = T>,
     T: Into<OsString> + Clone,
 {

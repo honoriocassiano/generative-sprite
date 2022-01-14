@@ -8,16 +8,16 @@ use image::io::Reader;
 use image::{DynamicImage, ImageBuffer, Rgba};
 use rand::distributions::{Distribution, WeightedIndex};
 use rand::seq::SliceRandom;
-use rand::{Rng, SeedableRng, thread_rng};
+use rand::{thread_rng, Rng, SeedableRng};
 use regex::Regex;
 
+use crate::argparser::Arguments;
 use rand::rngs::StdRng;
 use sprite::{Color, Sprite};
 use std::convert::TryInto;
-use crate::argparser::Arguments;
 
-mod sprite;
 mod argparser;
+mod sprite;
 
 #[derive(Copy, Clone)]
 struct Size(u32, u32);
