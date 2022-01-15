@@ -95,4 +95,11 @@ mod test {
 
         assert_eq!(actual, expected);
     }
+
+    #[test]
+    fn should_generate_random_seed() {
+        use super::Seed;
+
+        assert_ne!(Seed::default(), Seed::default());
+    }
 }
