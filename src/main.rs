@@ -1,11 +1,10 @@
 extern crate rand;
 
 use std::fs::File;
-use std::io::{Cursor, Read, Write};
+use std::io::Read;
 
 use image::imageops::FilterType;
-use image::io::Reader;
-use image::{DynamicImage, ImageBuffer, Rgba};
+use image::{ImageBuffer, Rgb};
 use rand::distributions::{Distribution, WeightedIndex};
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
@@ -22,26 +21,6 @@ mod sprite;
 
 #[derive(Copy, Clone)]
 struct Size(u32, u32);
-
-fn generate_header<T: Write>(writer: &mut T, width: usize, height: usize) {
-    writer
-        .write(format!("P3\n{} {}\n255", width, height).as_bytes())
-        .expect("Unable to generate header");
-}
-
-fn write_color<T: Write>(writer: &mut T, color: Color) {
-    writer
-        .write(format!("\n{} {} {}", color.0, color.1, color.2).as_bytes())
-        .expect("Unable to generate header");
-}
-
-fn read_image<T: AsRef<[u8]>>(data: T) -> DynamicImage {
-    Reader::new(Cursor::new(data))
-        .with_guessed_format()
-        .expect("Invalid format")
-        .decode()
-        .expect("Invalid format")
-}
 
 fn parse_palette_file(str: String) -> Vec<Vec<Color>> {
     let only_spaces_regex = Regex::new(r"\s+").unwrap();
@@ -87,17 +66,13 @@ fn vec_index_to_matrix(width: usize) -> impl Fn(usize) -> (usize, usize) {
 fn generate_image(
     image_width: usize,
     image_height: usize,
-    image: Vec<Color>,
-) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
-    let mut image_bytes = Vec::<u8>::new();
+    pixels: Vec<Color>,
+) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    let index_converter = matrix_index_to_vec(image_width);
 
-    generate_header(&mut image_bytes, image_width, image_height);
-
-    for c in image.iter() {
-        write_color(&mut image_bytes, *c);
-    }
-
-    let image = read_image(image_bytes);
+    let image = ImageBuffer::from_fn(image_width as u32, image_height as u32, |x, y| {
+        image::Rgb(pixels[index_converter(x as usize, y as usize)].into())
+    });
 
     let scale = 10;
 

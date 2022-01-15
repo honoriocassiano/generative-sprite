@@ -52,6 +52,12 @@ impl Sprite {
     }
 }
 
+impl Into<[u8; 3]> for Color {
+    fn into(self) -> [u8; 3] {
+        [self.0, self.1, self.2]
+    }
+}
+
 #[cfg(test)]
 mod test {
     #[test]
