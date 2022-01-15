@@ -1,5 +1,7 @@
+use crate::seed::Seed;
 use clap::{App, Arg};
 use std::ffi::OsString;
+use std::str::FromStr;
 
 pub struct Arguments {
     pub sprite_width: usize,
@@ -9,7 +11,7 @@ pub struct Arguments {
 
     pub margin: usize,
 
-    pub seed: Option<[u8; 32]>,
+    pub seed: Option<Seed>,
 }
 
 pub fn parse_arguments<I, T>(args: I) -> Arguments
@@ -86,7 +88,9 @@ where
         Some(m) => m.parse::<usize>().expect("Invalid margin"),
     };
 
-    let seed = matches.value_of("seed").map(|h| crate::parse_seed(h));
+    let seed = matches
+        .value_of("seed")
+        .map(|h| Seed::from_str(h).expect("Invalid seed"));
 
     Arguments {
         sprite_width,
@@ -101,6 +105,7 @@ where
 #[cfg(test)]
 mod test {
     use crate::argparser::parse_arguments;
+    use crate::Seed;
 
     #[test]
     fn should_parse_arguments_with_default_margin() {
@@ -147,6 +152,8 @@ mod test {
             0xdf, 0xfc, 0x03, 0x62, 0x9f, 0x48, 0x8d, 0xa3, 0x63, 0x9b, 0x90, 0xe1, 0xf9, 0x56,
             0x6b, 0xcd, 0x8b, 0x62,
         ];
+        let seed = Seed::new(seed);
+
         let args = parse_arguments(arg_list);
 
         assert_eq!(1, args.sprite_width);

@@ -8,15 +8,16 @@ use image::io::Reader;
 use image::{DynamicImage, ImageBuffer, Rgba};
 use rand::distributions::{Distribution, WeightedIndex};
 use rand::seq::SliceRandom;
-use rand::{thread_rng, Rng, SeedableRng};
+use rand::{Rng, SeedableRng};
 use regex::Regex;
 
 use crate::argparser::Arguments;
+use crate::seed::Seed;
 use rand::rngs::StdRng;
 use sprite::{Color, Sprite};
-use std::convert::TryInto;
 
 mod argparser;
+mod seed;
 mod sprite;
 
 #[derive(Copy, Clone)]
@@ -106,24 +107,6 @@ fn generate_image(
         image_height as u32 * scale,
         FilterType::Nearest,
     )
-}
-
-fn parse_seed(hash: &str) -> [u8; 32] {
-    assert_eq!(hash.len(), 64, "Seed must have 32 bits");
-
-    let vec = hash
-        .chars()
-        .collect::<Vec<_>>()
-        .chunks(2)
-        .map(|c| {
-            let hex_number = c.iter().collect::<String>();
-
-            u8::from_str_radix(hex_number.as_str(), 16)
-                .expect(format!("Invalid byte '{}'", hex_number).as_str())
-        })
-        .collect::<Vec<_>>();
-
-    vec.try_into().unwrap()
 }
 
 fn read_palettes(path: &str) -> Vec<Vec<Color>> {
@@ -292,25 +275,12 @@ fn main() {
 
     let palettes = read_palettes("palettes");
 
-    let seed = match args.seed {
-        Some(s) => s,
-        None => {
-            let mut rng = thread_rng();
-            let mut temp: [u8; 32] = Default::default();
-
-            rng.fill(&mut temp);
-
-            temp
-        }
+    let seed = match &args.seed {
+        Some(s) => s.clone(),
+        None => Seed::default(),
     };
 
-    let mut rng = StdRng::from_seed(seed);
-
-    let seed = seed
-        .iter()
-        .map(|t| format!("{:02x}", t))
-        .collect::<Vec<_>>()
-        .join("");
+    let mut rng = StdRng::from_seed(seed.data());
 
     let sprites = generate_sprite_matrix(&args, background, &palettes, &mut rng).into_iter();
     let sprites = if args.sprite_width > 9 && args.sprite_height > 9 {
@@ -415,22 +385,6 @@ mod test {
         let image = Sprite::new(width, height, data);
 
         let actual = remove_lonely_pixels(&image, 2, 8, Color::default());
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn should_parse_seed() {
-        use crate::parse_seed;
-
-        let seed = "04ed394c85de2fe0f1b778d37cc029b6a1366f1aa26498fb123b4ac75d955e08";
-        let expected: [u8; 32] = [
-            0x04, 0xed, 0x39, 0x4c, 0x85, 0xde, 0x2f, 0xe0, 0xf1, 0xb7, 0x78, 0xd3, 0x7c, 0xc0,
-            0x29, 0xb6, 0xa1, 0x36, 0x6f, 0x1a, 0xa2, 0x64, 0x98, 0xfb, 0x12, 0x3b, 0x4a, 0xc7,
-            0x5d, 0x95, 0x5e, 0x08,
-        ];
-
-        let actual = parse_seed(seed);
 
         assert_eq!(actual, expected);
     }
