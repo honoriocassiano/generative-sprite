@@ -77,12 +77,10 @@ impl Display for Seed {
 
 #[cfg(test)]
 mod test {
+    use super::*;
 
     #[test]
     fn should_parse_seed() {
-        use super::Seed;
-        use std::str::FromStr;
-
         let seed = "04ed394c85de2fe0f1b778d37cc029b6a1366f1aa26498fb123b4ac75d955e08";
         let expected = [
             0x04, 0xed, 0x39, 0x4c, 0x85, 0xde, 0x2f, 0xe0, 0xf1, 0xb7, 0x78, 0xd3, 0x7c, 0xc0,
@@ -98,8 +96,6 @@ mod test {
 
     #[test]
     fn should_generate_random_seed() {
-        use super::Seed;
-
         assert_ne!(Seed::default(), Seed::default());
     }
 }

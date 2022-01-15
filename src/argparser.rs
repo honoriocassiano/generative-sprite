@@ -104,8 +104,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::argparser::parse_arguments;
-    use crate::Seed;
+    use super::*;
 
     #[test]
     fn should_parse_arguments_with_default_margin() {

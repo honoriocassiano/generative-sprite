@@ -60,10 +60,10 @@ impl Into<[u8; 3]> for Color {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
     #[test]
     fn should_generate_solid_color_sprite() {
-        use crate::{Color, Sprite};
-
         let width = 5;
         let height = 5;
         let color = Color(255, 0, 0);
