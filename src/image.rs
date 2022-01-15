@@ -29,9 +29,9 @@ where
         let width = width as u32;
         let height = height as u32;
 
-        let data = ImageBuffer::from_fn(width, height, |x, y| {
+        let data = ImageBuffer::from_fn(width, height, |column, line| {
             image::Rgb(
-                pixels[index_converter(x as usize, y as usize)]
+                pixels[index_converter(line as usize, column as usize)]
                     .clone()
                     .into(),
             )
