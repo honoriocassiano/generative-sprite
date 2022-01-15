@@ -3,19 +3,19 @@ extern crate rand;
 use std::fs::File;
 use std::io::Read;
 
-use image::imageops::FilterType;
-use image::{ImageBuffer, Rgb};
 use rand::distributions::{Distribution, WeightedIndex};
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
 use regex::Regex;
 
 use crate::argparser::Arguments;
+use crate::image::Image;
 use crate::seed::Seed;
 use rand::rngs::StdRng;
 use sprite::{Color, Sprite};
 
 mod argparser;
+mod image;
 mod seed;
 mod sprite;
 
@@ -61,27 +61,6 @@ fn matrix_index_to_vec(width: usize) -> impl Fn(usize, usize) -> usize {
 fn vec_index_to_matrix(width: usize) -> impl Fn(usize) -> (usize, usize) {
     assert!(width > 0);
     move |index| (index / width, index % width)
-}
-
-fn generate_image(
-    image_width: usize,
-    image_height: usize,
-    pixels: Vec<Color>,
-) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-    let index_converter = matrix_index_to_vec(image_width);
-
-    let image = ImageBuffer::from_fn(image_width as u32, image_height as u32, |x, y| {
-        image::Rgb(pixels[index_converter(x as usize, y as usize)].into())
-    });
-
-    let scale = 10;
-
-    image::imageops::resize(
-        &image,
-        image_width as u32 * scale,
-        image_height as u32 * scale,
-        FilterType::Nearest,
-    )
 }
 
 fn read_palettes(path: &str) -> Vec<Vec<Color>> {
@@ -268,7 +247,7 @@ fn main() {
     };
 
     let image = generate_pixels(&args, &sprites, background);
-    let image = generate_image(image_width, image_height, image);
+    let image = Image::new(image_width, image_height, image).resize(10);
 
     let filename = format!("image_{}.png", seed);
 
