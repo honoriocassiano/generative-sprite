@@ -312,11 +312,15 @@ fn main() {
         .collect::<Vec<_>>()
         .join("");
 
-    let sprites = generate_sprite_matrix(&args, background, &palettes, &mut rng)
-        .into_iter()
-        .map(|s| remove_lonely_pixels(&s, 2, 8, background))
-        .map(|s| remove_lonely_pixels(&s, 2, 4, background))
-        .collect::<Vec<_>>();
+    let sprites = generate_sprite_matrix(&args, background, &palettes, &mut rng).into_iter();
+    let sprites = if args.sprite_width > 9 && args.sprite_height > 9 {
+        sprites
+            .map(|s| remove_lonely_pixels(&s, 2, 8, background))
+            .map(|s| remove_lonely_pixels(&s, 2, 4, background))
+            .collect::<Vec<_>>()
+    } else {
+        sprites.collect::<Vec<_>>()
+    };
 
     let image = generate_pixels(&args, &sprites, background);
     let image = generate_image(image_width, image_height, image);
